@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import LandingFeed from './pages/LandingFeed'
 import Feed from './pages/Feed'
 import Detail from './pages/Detail'
@@ -10,7 +10,7 @@ import DivulgacionIA from './pages/DivulgacionIA'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<LandingFeed />} />
         <Route path="/feed" element={<Feed />} />
@@ -21,6 +21,6 @@ export default function App() {
         <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/uso-ia" element={<DivulgacionIA />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
