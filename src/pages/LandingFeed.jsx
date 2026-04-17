@@ -22,15 +22,29 @@ function formatDateLong(iso) {
 }
 
 function groupByDate(items) {
-  const map = {}
+  const newMap = {}
+  const updatedMap = {}
+
   for (const item of items) {
-    const key = item.publication_date ?? 'unknown'
-    if (!map[key]) map[key] = []
-    map[key].push(item)
+    const pubDate = item.publication_date ?? 'unknown'
+    if (!newMap[pubDate]) newMap[pubDate] = []
+    newMap[pubDate].push(item)
+
+    if (item.last_updated && item.last_updated !== item.publication_date) {
+      const upDate = item.last_updated
+      if (!updatedMap[upDate]) updatedMap[upDate] = []
+      updatedMap[upDate].push(item)
+    }
   }
-  return Object.entries(map)
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([date, dayItems]) => ({ date, items: dayItems }))
+
+  const allDates = new Set([...Object.keys(newMap), ...Object.keys(updatedMap)])
+  return Array.from(allDates)
+    .sort((a, b) => b.localeCompare(a))
+    .map((date) => ({
+      date,
+      items: newMap[date] ?? [],
+      updatedItems: updatedMap[date] ?? [],
+    }))
 }
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
@@ -239,7 +253,7 @@ function Hero({ docCount }) {
 
 // ─── Daily Item row ───────────────────────────────────────────────────────────
 
-function DailyRow({ item, index }) {
+function DailyRow({ item, index, updated = false }) {
   const [ref, visible] = useReveal()
   const href = `/boletin/${pathToId(item.url)}`
 
@@ -255,9 +269,16 @@ function DailyRow({ item, index }) {
       >
         {/* Rank + ID */}
         <div className="flex flex-col gap-1.5 pt-0.5 flex-shrink-0 w-[110px] md:w-[130px]">
-          <span className="bg-primary text-on-primary px-2 py-0.5 text-[9px] font-headline font-black uppercase tracking-widest rounded-sm truncate">
-            {item.rank?.replace(/-/g, '\u2011') ?? '—'}
-          </span>
+          {updated ? (
+            <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 text-[9px] font-headline font-black uppercase tracking-widest rounded-sm truncate flex items-center gap-1">
+              <span className="material-symbols-outlined text-[10px]">update</span>
+              Actualizado
+            </span>
+          ) : (
+            <span className="bg-primary text-on-primary px-2 py-0.5 text-[9px] font-headline font-black uppercase tracking-widest rounded-sm truncate">
+              {item.rank?.replace(/-/g, '\u2011') ?? '—'}
+            </span>
+          )}
           <span className="text-[9px] font-headline font-bold text-outline uppercase tracking-tight truncate">
             {item.identifier}
           </span>
@@ -291,11 +312,12 @@ function DailyRow({ item, index }) {
 
 // ─── Day Group ────────────────────────────────────────────────────────────────
 
-function DayGroup({ date, items }) {
+function DayGroup({ date, items, updatedItems }) {
   const [headerRef, headerVisible] = useReveal()
   const dateLabel = formatDateLong(date)
   const [weekday, ...restParts] = dateLabel.split(', ')
   const rest = restParts.join(', ')
+  const totalCount = items.length + updatedItems.length
 
   return (
     <div className="mb-6">
@@ -319,16 +341,33 @@ function DayGroup({ date, items }) {
           className="ml-auto font-headline font-black text-outline/40 tabular-nums leading-none flex-shrink-0"
           style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
         >
-          {String(items.length).padStart(2, '0')}
+          {String(totalCount).padStart(2, '0')}
         </span>
       </div>
 
-      {/* Items */}
-      <div className="md:pl-6">
-        {items.map((item, i) => (
-          <DailyRow key={item.identifier} item={item} index={i} />
-        ))}
-      </div>
+      {/* New items */}
+      {items.length > 0 && (
+        <div className="md:pl-6">
+          {items.map((item, i) => (
+            <DailyRow key={item.identifier} item={item} index={i} />
+          ))}
+        </div>
+      )}
+
+      {/* Updated items */}
+      {updatedItems.length > 0 && (
+        <div className="md:pl-6 mt-4">
+          <div className="flex items-center gap-4 mb-2 py-2 border-t border-outline-variant/20">
+            <span className="material-symbols-outlined text-[14px] text-secondary">update</span>
+            <span className="font-headline text-[9px] font-bold uppercase tracking-[0.3em] text-secondary">
+              Actualizadas este día
+            </span>
+          </div>
+          {updatedItems.map((item, i) => (
+            <DailyRow key={`upd-${item.identifier}`} item={item} index={i} updated />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -656,6 +695,7 @@ export default function LandingFeed() {
                       key={entry.key}
                       date={entry.data.date}
                       items={entry.data.items}
+                      updatedItems={entry.data.updatedItems}
                     />
                   )
                 }

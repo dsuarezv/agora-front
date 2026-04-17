@@ -5,15 +5,29 @@ import BoletinCard from './BoletinCard'
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function groupByDate(items) {
-  const map = new Map()
+  const newMap = new Map()
+  const updatedMap = new Map()
+
   for (const item of items) {
-    const date = item.publication_date ?? ''
-    if (!map.has(date)) map.set(date, [])
-    map.get(date).push(item)
+    const pubDate = item.publication_date ?? ''
+    if (!newMap.has(pubDate)) newMap.set(pubDate, [])
+    newMap.get(pubDate).push(item)
+
+    if (item.last_updated && item.last_updated !== item.publication_date) {
+      const upDate = item.last_updated
+      if (!updatedMap.has(upDate)) updatedMap.set(upDate, [])
+      updatedMap.get(upDate).push(item)
+    }
   }
-  return [...map.entries()]
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([date, items]) => ({ date, items }))
+
+  const allDates = new Set([...newMap.keys(), ...updatedMap.keys()])
+  return [...allDates]
+    .sort((a, b) => b.localeCompare(a))
+    .map((date) => ({
+      date,
+      items: newMap.get(date) ?? [],
+      updatedItems: updatedMap.get(date) ?? [],
+    }))
 }
 
 function formatDayLabel(dateStr) {
@@ -175,7 +189,7 @@ function CalendarNav({ dateSet, currentActiveDate, onSelectDate }) {
 
 // ─── Day Group ────────────────────────────────────────────────────────────────
 
-function DayGroup({ date, items, activeKeywords }) {
+function DayGroup({ date, items, updatedItems, activeKeywords }) {
   return (
     <div className="pb-12">
       <div className="flex items-center gap-4 mb-6">
@@ -184,21 +198,43 @@ function DayGroup({ date, items, activeKeywords }) {
         </h2>
         <div className="h-px flex-1 bg-outline-variant/20" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {items.map((item) => (
-          <BoletinCard key={item.identifier} item={item} activeKeywords={activeKeywords} />
-        ))}
-      </div>
+
+      {items.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {items.map((item) => (
+            <BoletinCard key={item.identifier} item={item} activeKeywords={activeKeywords} />
+          ))}
+        </div>
+      )}
+
+      {updatedItems.length > 0 && (
+        <div className={items.length > 0 ? 'mt-8' : ''}>
+          <div className="flex items-center gap-3 mb-5">
+            <span className="material-symbols-outlined text-[16px] text-secondary">update</span>
+            <span className="font-headline text-[10px] font-bold uppercase tracking-[0.3em] text-secondary">
+              Actualizadas este día
+            </span>
+            <div className="h-px flex-1 bg-outline-variant/15" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {updatedItems.map((item) => (
+              <BoletinCard key={`upd-${item.identifier}`} item={item} activeKeywords={activeKeywords} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-// Estimate height: each card row ~320px, group header ~72px
-function estimateGroupHeight(itemCount) {
-  const rows = Math.ceil(itemCount / 3)
-  return rows * 320 + 72
+// Estimate height: each card row ~320px, group header ~72px, updated section header ~48px
+function estimateGroupHeight(itemCount, updatedCount) {
+  const newRows = itemCount > 0 ? Math.ceil(itemCount / 3) : 0
+  const updRows = updatedCount > 0 ? Math.ceil(updatedCount / 3) : 0
+  const updHeader = updatedCount > 0 ? 48 : 0
+  return newRows * 320 + updRows * 320 + updHeader + 72
 }
 
 export default function DayGroupedView({ items, activeKeywords }) {
@@ -217,7 +253,7 @@ export default function DayGroupedView({ items, activeKeywords }) {
 
   const virtualizer = useWindowVirtualizer({
     count: dayGroups.length,
-    estimateSize: (i) => estimateGroupHeight(dayGroups[i].items.length),
+    estimateSize: (i) => estimateGroupHeight(dayGroups[i].items.length, dayGroups[i].updatedItems.length),
     overscan: 4,
     scrollMargin,
     scrollPaddingStart: 180, // sticky header + filter bar
@@ -271,7 +307,7 @@ export default function DayGroupedView({ items, activeKeywords }) {
                   transform: `translateY(${vItem.start - scrollMargin}px)`,
                 }}
               >
-                <DayGroup date={group.date} items={group.items} activeKeywords={activeKeywords} />
+                <DayGroup date={group.date} items={group.items} updatedItems={group.updatedItems} activeKeywords={activeKeywords} />
               </div>
             )
           })}
