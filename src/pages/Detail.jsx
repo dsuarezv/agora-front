@@ -172,13 +172,13 @@ function ErrorState({ message, onRetry }) {
   )
 }
 
-function ArticleSection({ content }) {
+function ArticleSection({ content, title = 'En Profundidad' }) {
   return (
     <section className="mb-16">
       <div className="flex items-center gap-4 mb-10">
         <div className="h-[2px] w-12 bg-primary" />
         <h2 className="font-headline text-xl font-bold text-primary uppercase tracking-widest">
-          En Profundidad
+          {title}
         </h2>
       </div>
       <div className="prose-article">
@@ -239,6 +239,7 @@ export default function Detail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [article, setArticle] = useState(null)
+  const [updates, setUpdates] = useState(null)
 
   const fetchBoletin = () => {
     setLoading(true)
@@ -256,14 +257,15 @@ export default function Detail() {
   useEffect(() => {
     window.scrollTo(0, 0)
     fetchBoletin()
-    fetch(`${API_BASE_URL}/articles/${id}.md`)
-      .then((res) => (res.ok && !res.headers.get('content-type')?.includes('text/html')) ? res.text() : null)
-      .then((text) => {
-        if (!text) return setArticle(null)
-        const stripped = text.replace(/^---[\s\S]*?---\n?/, '')
-        setArticle(stripped)
-      })
-      .catch(() => setArticle(null))
+    const stripFrontmatter = (text) => text.replace(/^---[\s\S]*?---\n?/, '')
+    const fetchMd = (url, setter) =>
+      fetch(url)
+        .then((res) => (res.ok && !res.headers.get('content-type')?.includes('text/html')) ? res.text() : null)
+        .then((text) => setter(text ? stripFrontmatter(text) : null))
+        .catch(() => setter(null))
+
+    fetchMd(`${API_BASE_URL}/articles/${id}.md`, setArticle)
+    fetchMd(`${API_BASE_URL}/articles/${id}--updates.md`, setUpdates)
   }, [id])
 
   useEffect(() => {
@@ -396,6 +398,8 @@ export default function Detail() {
               />
 
               {article && <ArticleSection content={article} />}
+
+              {updates && <ArticleSection content={updates} title="Actualizaciones de la Ley" />}
 
               {boletin.key_points?.length > 0 && (
                 <div>
