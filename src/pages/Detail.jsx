@@ -240,6 +240,7 @@ export default function Detail() {
   const [error, setError] = useState(null)
   const [article, setArticle] = useState(null)
   const [updates, setUpdates] = useState(null)
+  const [critical, setCritical] = useState(null)
 
   const fetchBoletin = () => {
     setLoading(true)
@@ -266,6 +267,7 @@ export default function Detail() {
 
     fetchMd(`${API_BASE_URL}/articles/${id}.md`, setArticle)
     fetchMd(`${API_BASE_URL}/articles/${id}--updates.md`, setUpdates)
+    fetchMd(`${API_BASE_URL}/articles/${id}--critical.md`, setCritical)
   }, [id])
 
   useEffect(() => {
@@ -400,6 +402,8 @@ export default function Detail() {
               {article && <ArticleSection content={article} />}
 
               {updates && <ArticleSection content={updates} title="Actualizaciones de la Ley" />}
+
+              {critical && <ArticleSection content={critical} title="Análisis Crítico" />}
 
               {boletin.key_points?.length > 0 && (
                 <div>
