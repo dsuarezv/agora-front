@@ -28,7 +28,7 @@ export default function Header() {
             to="/"
             className="text-2xl font-black tracking-tighter text-primary font-headline uppercase select-none"
           >
-            AGORA
+            ÁGORA
           </Link>
 
           {/* Desktop nav */}

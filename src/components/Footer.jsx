@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-screen-xl mx-auto py-16 px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="space-y-6 max-w-sm">
           <div className="text-2xl font-black tracking-tighter text-primary font-headline uppercase">
-            AGORA
+            ÁGORA
           </div>
           <p className="font-body italic text-lg text-slate-500 leading-relaxed">
             Haciendo que la información pública sea realmente pública y comprensible para todos los ciudadanos.

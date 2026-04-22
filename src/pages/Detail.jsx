@@ -280,7 +280,7 @@ export default function Detail() {
       dateModified: boletin.last_updated || boletin.publication_date,
       publisher: {
         '@type': 'Organization',
-        name: 'AGORA',
+        name: 'ÁGORA',
       },
       author: {
         '@type': 'SoftwareApplication',
@@ -289,7 +289,7 @@ export default function Detail() {
       },
       editor: {
         '@type': 'Organization',
-        name: 'AGORA',
+        name: 'ÁGORA',
       },
       isBasedOn: {
         '@type': 'LegislativeWork',
