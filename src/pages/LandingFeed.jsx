@@ -253,6 +253,7 @@ function Hero({ docCount }) {
 function DailyRow({ item, index, updated = false }) {
   const [ref, visible] = useReveal()
   const href = `/boletin/${pathToId(item.url)}`
+  const f = item.f ?? 0
 
   return (
     <div
@@ -260,12 +261,12 @@ function DailyRow({ item, index, updated = false }) {
       style={{ transitionDelay: `${Math.min(index * 45, 300)}ms` }}
       className={`reveal-left ${visible ? 'in-view' : ''}`}
     >
-      <Link
-        to={href}
-        className="group flex items-start gap-4 md:gap-6 py-5 border-b border-outline-variant/15 hover:bg-surface-container-low transition-colors duration-200 px-3 -mx-3 rounded-sm"
-      >
+      <div className="group relative flex items-start gap-4 md:gap-6 py-5 border-b border-outline-variant/15 hover:bg-surface-container-low transition-colors duration-200 px-3 -mx-3 rounded-sm cursor-pointer">
+        {/* Stretched base link — covers the whole row */}
+        <Link to={href} className="absolute inset-0 z-10" aria-label={item.visible_title || item.title} />
+
         {/* Rank + ID */}
-        <div className="flex flex-col gap-1.5 pt-0.5 flex-shrink-0 w-[110px] md:w-[130px]">
+        <div className="relative z-20 pointer-events-none flex flex-col gap-1.5 pt-0.5 flex-shrink-0 w-[110px] md:w-[130px]">
           {updated ? (
             <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 text-[9px] font-headline font-black uppercase tracking-widest rounded-sm truncate flex items-center gap-1">
               <span className="material-symbols-outlined text-[10px]">update</span>
@@ -282,7 +283,7 @@ function DailyRow({ item, index, updated = false }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <div className="relative z-20 pointer-events-none flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1.5">
             <span className="material-symbols-outlined text-[12px] text-outline flex-shrink-0">
               account_balance
@@ -294,15 +295,46 @@ function DailyRow({ item, index, updated = false }) {
           <h3 className="font-headline text-base md:text-lg font-bold text-on-surface group-hover:text-primary transition-colors duration-200 leading-snug line-clamp-2">
             {item.visible_title || item.title}
           </h3>
+          {(f & 7) !== 0 && (
+            <div className="relative z-30 pointer-events-auto flex items-center gap-1.5 mt-1.5">
+              {(f & 1) !== 0 && (
+                <Link
+                  to={`${href}#articulo`}
+                  className="material-symbols-outlined text-[13px] text-outline/50 hover:text-primary transition-colors"
+                  title="Artículo disponible"
+                >
+                  article
+                </Link>
+              )}
+              {(f & 2) !== 0 && (
+                <Link
+                  to={`${href}#actualizaciones`}
+                  className="material-symbols-outlined text-[13px] text-outline/50 hover:text-primary transition-colors"
+                  title="Historial de actualizaciones disponible"
+                >
+                  history
+                </Link>
+              )}
+              {(f & 4) !== 0 && (
+                <Link
+                  to={`${href}#critica`}
+                  className="material-symbols-outlined text-[13px] text-tertiary/60 hover:text-tertiary transition-colors"
+                  title="Análisis crítico disponible"
+                >
+                  crisis_alert
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Arrow */}
-        <div className="flex-shrink-0 pt-3.5">
+        <div className="relative z-20 pointer-events-none flex-shrink-0 pt-3.5">
           <span className="material-symbols-outlined text-[20px] text-outline group-hover:text-primary group-hover:translate-x-1 transition-all duration-200">
             arrow_forward
           </span>
         </div>
-      </Link>
+      </div>
     </div>
   )
 }

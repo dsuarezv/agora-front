@@ -2,31 +2,6 @@ import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
-const categories = [
-  {
-    id: 'vivienda',
-    span: 'md:col-span-8',
-    bg: 'bg-primary text-on-primary',
-    icon: 'home',
-    badge: '5 nuevas actualizaciones',
-    title: 'Vivienda y Alquiler',
-    description:
-      'Guía completa sobre la Ley de Vivienda, ayudas al alquiler joven y subvenciones para rehabilitación energética.',
-    footer: 'Lo último: Nueva convocatoria de fondos NextGen para fachadas.',
-    image: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80',
-  },
-  {
-    id: 'empleo',
-    span: 'md:col-span-4',
-    bg: 'bg-surface-container-highest',
-    icon: 'work',
-    title: 'Empleo Público',
-    description: 'Calendario actualizado de oposiciones, ofertas locales y bolsas de trabajo estatales.',
-    footer: 'Cuerpo de Gestión Administrativa (15/10)',
-    footerLabel: 'Próximo Cierre',
-  },
-]
-
 const steps = [
   {
     icon: 'description',

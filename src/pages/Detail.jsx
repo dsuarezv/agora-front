@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { API_BASE_URL } from '../constants'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
@@ -13,6 +13,8 @@ const STATUS_MAP = {
   repealed: { label: 'Derogada', className: 'bg-surface-container-high text-outline border border-outline-variant/40' },
   amended:  { label: 'Modificada', className: 'bg-secondary-container text-on-secondary-container border border-secondary-container' },
 }
+
+const HASH_SCROLL_OFFSET = 112
 
 function formatDate(iso) {
   if (!iso) return '—'
@@ -172,9 +174,9 @@ function ErrorState({ message, onRetry }) {
   )
 }
 
-function ArticleSection({ content, title = 'En Profundidad' }) {
+function ArticleSection({ content, title = 'En Profundidad', id }) {
   return (
-    <section className="mb-16">
+    <section id={id} className="mb-16">
       <div className="flex items-center gap-4 mb-10">
         <div className="h-[2px] w-12 bg-primary" />
         <h2 className="font-headline text-xl font-bold text-primary uppercase tracking-widest">
@@ -235,6 +237,7 @@ function ArticleSection({ content, title = 'En Profundidad' }) {
 export default function Detail() {
   const params = useParams()
   const id = params['*']
+  const { hash } = useLocation()
   const [boletin, setBoletin] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -256,7 +259,7 @@ export default function Detail() {
   }
 
   useEffect(() => {
-    window.scrollTo(0, 0)
+    if (!hash) window.scrollTo(0, 0)
     fetchBoletin()
     const stripFrontmatter = (text) => text.replace(/^---[\s\S]*?---\n?/, '')
     const fetchMd = (url, setter) =>
@@ -269,6 +272,15 @@ export default function Detail() {
     fetchMd(`${API_BASE_URL}/articles/${id}--updates.md`, setUpdates)
     fetchMd(`${API_BASE_URL}/articles/${id}--critical.md`, setCritical)
   }, [id])
+
+  useEffect(() => {
+    if (!hash) return
+    const el = document.querySelector(hash)
+    if (!el) return
+
+    const top = el.getBoundingClientRect().top + window.scrollY - HASH_SCROLL_OFFSET
+    window.scrollTo({ top, behavior: 'smooth' })
+  }, [hash, article, updates, critical])
 
   useEffect(() => {
     if (!boletin) return
@@ -399,11 +411,11 @@ export default function Detail() {
                 professionalImpact={boletin.professional_impact}
               />
 
-              {article && <ArticleSection content={article} />}
+              {article && <ArticleSection content={article} id="articulo" />}
 
-              {updates && <ArticleSection content={updates} title="Actualizaciones de la Ley" />}
+              {updates && <ArticleSection content={updates} title="Actualizaciones de la Ley" id="actualizaciones" />}
 
-              {critical && <ArticleSection content={critical} title="Análisis Crítico" />}
+              {critical && <ArticleSection content={critical} title="Análisis Crítico" id="critica" />}
 
               {boletin.key_points?.length > 0 && (
                 <div>
