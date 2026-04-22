@@ -160,29 +160,34 @@ function Hero({ docCount }) {
             <div className="flex items-center gap-4 mb-10">
               <div className="h-px w-14 bg-primary" />
               <span className="font-headline text-[10px] font-bold uppercase tracking-[0.35em] text-secondary">
-                AGORA · Boletín diario
+                AGORA · Resúmenes periodísticos con IA
               </span>
             </div>
 
             <h1 className="font-headline font-black text-primary leading-[0.88] tracking-tighter mb-10">
               <span className="block" style={{ fontSize: 'clamp(3.5rem, 10vw, 8.5rem)' }}>
-                EL ESTADO
+                LAS LEYES
               </span>
               <span
                 className="block font-body italic font-normal text-secondary"
                 style={{ fontSize: 'clamp(2.75rem, 7.5vw, 6.5rem)' }}
               >
-                en claro.
+                al detalle.
               </span>
             </h1>
 
-            <p className="font-body text-xl md:text-2xl text-on-surface-variant max-w-xl leading-relaxed mb-12">
-              Toda la normativa oficial del BOE, traducida a lenguaje humano. Cada día. Sin laberintos.
+            <p className="font-body text-xl md:text-2xl text-on-surface-variant max-w-xl leading-relaxed mb-5">
+              Convertimos la normativa oficial del BOE en resúmenes claros con IA: qué dice una ley, qué ha cambiado y qué espacios deja abiertos al poder.
+            </p>
+
+            <p className="font-headline text-[10px] font-bold uppercase tracking-[0.28em] text-secondary mb-12 flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">code</span>
+              <a href="https://github.com/dsuarezv/agora-es">Resúmenes y análisis disponibles públicamente en GitHub</a>.
             </p>
 
             <div className="flex flex-wrap gap-3">
               <a
-                href="#timeline"
+                href="#"
                 className="bg-primary text-on-primary px-8 py-4 font-headline font-bold text-sm uppercase tracking-widest hover:bg-primary-container transition-colors flex items-center gap-3"
               >
                 Leer el feed
@@ -202,27 +207,39 @@ function Hero({ docCount }) {
                   <AnimatedCounter target={docCount || 14208} />
                 </div>
                 <div className="font-headline text-[10px] font-bold uppercase tracking-[0.35em] text-secondary mt-3">
-                  Boletines simplificados
+                  Textos legales procesados
                 </div>
               </div>
 
-              <div className="space-y-5">
+              <div className="space-y-6">
                 {[
-                  { label: 'Documentos vigentes', value: '9.847', icon: 'check_circle' },
-                  { label: 'Actualizados esta semana', value: '134', icon: 'update' },
-                  { label: 'Categorías cubiertas', value: '28', icon: 'category' },
-                ].map(({ label, value, icon }) => (
-                  <div key={label} className="flex items-center gap-4">
-                    <span className="material-symbols-outlined text-primary text-lg icon-fill flex-shrink-0">
+                  {
+                    label: 'Resumen divulgativo',
+                    text: 'Explicamos el contenido de cada norma en términos sencillos para cualquier ciudadano.',
+                    icon: 'article',
+                  },
+                  {
+                    label: 'Actualizaciones',
+                    text: 'Seguimos los cambios de la ley y los contamos con el mismo tono claro, sin jerga innecesaria.',
+                    icon: 'history',
+                  },
+                  {
+                    label: 'Análisis crítico',
+                    text: 'Buscamos vacíos y zonas grises que puedan debilitar el control democrático o favorecer intereses concentrados.',
+                    icon: 'crisis_alert',
+                  },
+                ].map(({ label, text, icon }) => (
+                  <div key={label} className="flex items-start gap-4">
+                    <span className="material-symbols-outlined text-primary text-xl icon-fill flex-shrink-0 mt-0.5">
                       {icon}
                     </span>
-                    <div className="flex-1 border-b border-outline-variant/20 pb-2 flex justify-between items-baseline gap-4">
-                      <span className="font-headline text-sm text-on-surface-variant font-bold truncate">
+                    <div className="flex-1 border-b border-outline-variant/20 pb-4">
+                      <span className="font-headline text-sm text-primary font-black uppercase tracking-widest block mb-1.5">
                         {label}
                       </span>
-                      <span className="font-headline font-black text-primary text-sm tabular-nums flex-shrink-0">
-                        {value}
-                      </span>
+                      <p className="font-body text-sm md:text-base text-on-surface-variant leading-relaxed">
+                        {text}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -296,32 +313,35 @@ function DailyRow({ item, index, updated = false }) {
             {item.visible_title || item.title}
           </h3>
           {(f & 7) !== 0 && (
-            <div className="relative z-30 pointer-events-auto flex items-center gap-1.5 mt-1.5">
+            <div className="relative z-30 pointer-events-auto flex flex-wrap items-center gap-1.5 mt-2.5">
               {(f & 1) !== 0 && (
                 <Link
                   to={`${href}#articulo`}
-                  className="material-symbols-outlined text-[13px] text-outline/50 hover:text-primary transition-colors"
-                  title="Artículo disponible"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-primary/15 bg-primary/5 px-2 py-1 font-headline text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-on-primary transition-colors"
+                  title="Ir al resumen divulgativo"
                 >
-                  article
+                  <span className="material-symbols-outlined text-[12px]">article</span>
+                  Resumen divulgativo
                 </Link>
               )}
               {(f & 2) !== 0 && (
                 <Link
                   to={`${href}#actualizaciones`}
-                  className="material-symbols-outlined text-[13px] text-outline/50 hover:text-primary transition-colors"
-                  title="Historial de actualizaciones disponible"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-secondary/15 bg-secondary/5 px-2 py-1 font-headline text-[9px] font-black uppercase tracking-widest text-secondary hover:bg-secondary hover:text-on-secondary transition-colors"
+                  title="Ir a actualizaciones"
                 >
-                  history
+                  <span className="material-symbols-outlined text-[12px]">history</span>
+                  Actualizaciones
                 </Link>
               )}
               {(f & 4) !== 0 && (
                 <Link
                   to={`${href}#critica`}
-                  className="material-symbols-outlined text-[13px] text-tertiary/60 hover:text-tertiary transition-colors"
-                  title="Análisis crítico disponible"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-tertiary/20 bg-tertiary/10 px-2 py-1 font-headline text-[9px] font-black uppercase tracking-widest text-tertiary hover:bg-tertiary hover:text-on-tertiary transition-colors"
+                  title="Ir al análisis crítico"
                 >
-                  crisis_alert
+                  <span className="material-symbols-outlined text-[12px]">crisis_alert</span>
+                  Análisis crítico
                 </Link>
               )}
             </div>
@@ -347,7 +367,7 @@ function DayGroup({ date, items, updatedItems, onActiveChange }) {
   const dateLabel = formatDateLong(date)
   const [weekday, ...restParts] = dateLabel.split(', ')
   const rest = restParts.join(', ')
-  const totalCount = items.length + updatedItems.length
+  const dayOfMonth = date?.split('-')[2] ?? ''
 
   useEffect(() => {
     const el = rootRef.current
@@ -382,7 +402,7 @@ function DayGroup({ date, items, updatedItems, onActiveChange }) {
           className="ml-auto font-headline font-black text-outline/40 tabular-nums leading-none flex-shrink-0"
           style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)' }}
         >
-          {String(totalCount).padStart(2, '0')}
+          {dayOfMonth}
         </span>
       </div>
 
