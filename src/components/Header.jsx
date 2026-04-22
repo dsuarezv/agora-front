@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
-const navLinks = [
-  { label: 'Boletines', to: '/boletines' },
-]
+const navLinks = []
 
 export default function Header() {
   const { pathname } = useLocation()
@@ -59,14 +57,6 @@ export default function Header() {
               <span className="material-symbols-outlined text-primary icon-fill">account_circle</span>
             </button>
 
-            {/* Mobile: Boletines shortcut + hamburger */}
-            <Link
-              to="/boletines"
-              className="md:hidden flex items-center gap-1.5 bg-primary text-on-primary px-3 py-2 rounded-lg font-headline font-bold text-xs uppercase tracking-tight mr-2"
-            >
-              <span className="material-symbols-outlined text-[16px]">article</span>
-              Boletines
-            </Link>
             <button
               onClick={() => setMenuOpen((o) => !o)}
               className="md:hidden p-2 hover:bg-surface-container-low rounded-lg transition-all text-primary"

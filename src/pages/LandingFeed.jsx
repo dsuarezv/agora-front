@@ -3,6 +3,9 @@ import { API_BASE_URL } from '../constants'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import CalendarNav from '../components/CalendarNav'
+import KeywordFilter from '../components/KeywordFilter'
+import { normalize } from '../utils'
 
 // ─── Utils ───────────────────────────────────────────────────────────────────
 
@@ -138,7 +141,7 @@ function Hero({ docCount }) {
   })
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-between pt-32 pb-0 overflow-hidden bg-background">
+    <section className="relative flex flex-col justify-between pt-28 pb-0 overflow-hidden bg-background">
       {/* Background structural grid */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -150,7 +153,7 @@ function Hero({ docCount }) {
       />
 
       <div className="max-w-screen-2xl mx-auto px-6 md:px-12 w-full flex-1 flex flex-col justify-center">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end pb-24 pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-end pb-12 pt-4">
 
           {/* ── Left: editorial headline ── */}
           <div className="lg:col-span-7">
@@ -185,12 +188,6 @@ function Hero({ docCount }) {
                 Leer el feed
                 <span className="material-symbols-outlined text-base">arrow_downward</span>
               </a>
-              <Link
-                to="/boletines"
-                className="border border-primary text-primary px-8 py-4 font-headline font-bold text-sm uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-colors"
-              >
-                Índice completo
-              </Link>
             </div>
           </div>
 
@@ -276,7 +273,7 @@ function DailyRow({ item, index, updated = false }) {
             </span>
           ) : (
             <span className="bg-primary text-on-primary px-2 py-0.5 text-[9px] font-headline font-black uppercase tracking-widest rounded-sm truncate">
-              {item.rank?.replace(/-/g, '\u2011') ?? '—'}
+              {item.rank?.replace(/-/g, '‑') ?? '—'}
             </span>
           )}
           <span className="text-[9px] font-headline font-bold text-outline uppercase tracking-tight truncate">
@@ -312,15 +309,27 @@ function DailyRow({ item, index, updated = false }) {
 
 // ─── Day Group ────────────────────────────────────────────────────────────────
 
-function DayGroup({ date, items, updatedItems }) {
+function DayGroup({ date, items, updatedItems, onActiveChange }) {
   const [headerRef, headerVisible] = useReveal()
+  const rootRef = useRef(null)
   const dateLabel = formatDateLong(date)
   const [weekday, ...restParts] = dateLabel.split(', ')
   const rest = restParts.join(', ')
   const totalCount = items.length + updatedItems.length
 
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el || !onActiveChange) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) onActiveChange(date) },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [date, onActiveChange])
+
   return (
-    <div className="mb-6">
+    <div ref={rootRef} id={`day-${date}`} className="mb-6">
       {/* Date separator */}
       <div
         ref={headerRef}
@@ -368,159 +377,6 @@ function DayGroup({ date, items, updatedItems }) {
           ))}
         </div>
       )}
-    </div>
-  )
-}
-
-// ─── Weekly Digest ────────────────────────────────────────────────────────────
-
-function WeeklyDigest({ weekData }) {
-  const [ref, visible] = useReveal()
-
-  return (
-    <div ref={ref} className={`reveal-scale ${visible ? 'in-view' : ''} my-20`}>
-      <div className="bg-primary text-on-primary px-10 md:px-20 py-16 md:py-20 relative overflow-hidden">
-        {/* Decorative gavel */}
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none select-none">
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: '20rem', lineHeight: 1 }}
-          >
-            gavel
-          </span>
-        </div>
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-5 mb-8">
-            <div className="h-px w-12 bg-on-primary/30" />
-            <span className="font-headline text-[10px] font-bold uppercase tracking-[0.35em] text-on-primary/50">
-              Resumen Semanal
-            </span>
-          </div>
-
-          <p className="font-headline font-bold text-[10px] md:text-[11px] uppercase tracking-[0.4em] text-on-primary/40 mb-4">
-            {weekData.dateRange}
-          </p>
-
-          <blockquote
-            className="font-body font-normal italic text-on-primary leading-[1.25] mb-10"
-            style={{ fontSize: 'clamp(1.5rem, 3.5vw, 3rem)' }}
-          >
-            {weekData.summary}
-          </blockquote>
-
-          <div className="flex flex-wrap gap-2 mb-12">
-            {weekData.highlights.map((h) => (
-              <span
-                key={h}
-                className="border border-on-primary/25 text-on-primary/75 px-4 py-1.5 font-headline text-[10px] font-bold uppercase tracking-widest"
-              >
-                {h}
-              </span>
-            ))}
-          </div>
-
-          <div className="flex items-end justify-between flex-wrap gap-8">
-            <div className="flex items-center gap-10 md:gap-16">
-              {[
-                { label: 'Boletines', value: weekData.count },
-                { label: 'Urgentes', value: weekData.urgent },
-                { label: 'Categorías', value: weekData.categories },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <div className="font-headline font-black text-on-primary tabular-nums leading-none mb-1.5" style={{ fontSize: 'clamp(1.75rem,3.5vw,2.5rem)' }}>
-                    {value}
-                  </div>
-                  <div className="font-headline text-[9px] font-bold uppercase tracking-[0.35em] text-on-primary/40">
-                    {label}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <Link
-              to="/boletines"
-              className="flex items-center gap-3 border border-on-primary/30 text-on-primary px-7 py-3.5 font-headline font-bold text-[11px] uppercase tracking-widest hover:bg-on-primary hover:text-primary transition-colors duration-200"
-            >
-              Ver resumen
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Monograph ────────────────────────────────────────────────────────────────
-
-function Monograph({ data }) {
-  const [ref, visible] = useReveal()
-
-  return (
-    <div ref={ref} className={`reveal-clip ${visible ? 'in-view' : ''} my-20`}>
-      <div className="relative overflow-hidden" style={{ minHeight: '580px' }}>
-        {/* Background image */}
-        {data.image && (
-          <img
-            src={data.image}
-            alt={data.title}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1200ms] ease-out hover:scale-[1.03]"
-            style={{ transform: 'scale(1.05)' }}
-          />
-        )}
-
-        {/* Gradient overlay: left heavy, right lighter */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/85 to-primary/50" />
-        {/* Bottom fade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
-
-        {/* Content */}
-        <div className="relative z-10 px-10 md:px-20 py-16 md:py-20 flex flex-col justify-end h-full min-h-[580px]">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-5 mb-8">
-              <span className="bg-tertiary-container text-on-tertiary px-4 py-1.5 font-headline text-[10px] font-black uppercase tracking-[0.35em]">
-                Monográfico
-              </span>
-              <div className="h-px flex-1 bg-on-primary/20" />
-            </div>
-
-            <p className="font-headline font-bold text-[10px] uppercase tracking-[0.4em] text-on-primary/45 mb-5">
-              {data.category} · {data.readTime} de lectura
-            </p>
-
-            <h2
-              className="font-headline font-black text-on-primary leading-[0.92] tracking-tighter mb-8"
-              style={{ fontSize: 'clamp(2.25rem, 5vw, 4.75rem)' }}
-            >
-              {data.title}
-            </h2>
-
-            <p className="font-body italic text-xl md:text-2xl text-on-primary/75 max-w-2xl leading-relaxed mb-10">
-              {data.summary}
-            </p>
-
-            <div className="flex flex-wrap gap-2.5 mb-12">
-              {data.topics.map((t) => (
-                <span
-                  key={t}
-                  className="bg-on-primary/10 border border-on-primary/20 text-on-primary/75 px-4 py-1.5 font-headline text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-
-            <Link
-              to={data.href || '/boletines'}
-              className="inline-flex items-center gap-3 bg-on-primary text-primary px-8 py-4 font-headline font-black text-sm uppercase tracking-widest hover:bg-primary-fixed transition-colors duration-200"
-            >
-              Leer análisis completo
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </Link>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -597,29 +453,6 @@ function NewsletterBanner() {
   )
 }
 
-// ─── Mock special content ─────────────────────────────────────────────────────
-
-const MONOGRAPH_DATA = {
-  title: 'La nueva Ley de Vivienda: lo que necesitas saber si alquilas o eres propietario',
-  summary:
-    'Desde la regulación de precios en zonas tensionadas hasta las nuevas obligaciones para grandes tenedores, analizamos todos los cambios que entran en vigor este año.',
-  image: 'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1600&q=80',
-  category: 'Vivienda',
-  readTime: '12 min',
-  topics: ['Arrendamientos', 'Zonas tensionadas', 'Grandes tenedores', 'Rehabilitación'],
-  href: '/boletines',
-}
-
-const WEEKLY_SAMPLE = {
-  dateRange: 'Semana del 7 al 11 de Abril de 2026',
-  summary:
-    '"Reforma de las pensiones, nuevas restricciones de movilidad y cambios en la normativa de extranjería: una semana densa en legislación de impacto directo para el ciudadano."',
-  highlights: ['Pensiones', 'Movilidad', 'Extranjería', 'Fiscalidad', 'Empleo Público'],
-  count: 47,
-  urgent: 3,
-  categories: 9,
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const DAYS_PER_LOAD = 4
@@ -628,6 +461,12 @@ export default function LandingFeed() {
   const [allItems, setAllItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [visibleDays, setVisibleDays] = useState(DAYS_PER_LOAD)
+  const [searchRaw, setSearchRaw] = useState('')
+  const [search, setSearch] = useState('')
+  const [selectedKeywords, setSelectedKeywords] = useState(new Set())
+  const [matchMode, setMatchMode] = useState('any')
+  const [activeDate, setActiveDate] = useState(null)
+  const scrollTargetRef = useRef(null)
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/boletines/index.json`)
@@ -639,24 +478,93 @@ export default function LandingFeed() {
       .catch(() => setLoading(false))
   }, [])
 
+  // Debounce text search
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchRaw.trim()), 250)
+    return () => clearTimeout(t)
+  }, [searchRaw])
+
   const groups = useMemo(() => groupByDate(allItems), [allItems])
   const visibleGroups = useMemo(() => groups.slice(0, visibleDays), [groups, visibleDays])
   const hasMore = visibleDays < groups.length
+  const allDateSet = useMemo(() => new Set(groups.map((g) => g.date)), [groups])
+
+  const allKeywords = useMemo(() => {
+    const counts = {}
+    for (const item of allItems)
+      for (const k of item.keywords ?? [])
+        counts[k] = (counts[k] ?? 0) + 1
+    return Object.entries(counts)
+      .map(([keyword, count]) => ({ keyword, count }))
+      .sort((a, b) => b.count - a.count)
+  }, [allItems])
 
   const loadMore = useCallback(() => {
     if (hasMore) setVisibleDays((v) => v + DAYS_PER_LOAD)
   }, [hasMore])
 
-  // Build the mixed feed: inject monograph after day 0, weekly after day 4
-  const feedEntries = useMemo(() => {
-    const result = []
-    for (let i = 0; i < visibleGroups.length; i++) {
-      result.push({ type: 'day', data: visibleGroups[i], key: `day-${visibleGroups[i].date}` })
-      if (i === 0) result.push({ type: 'monograph', key: 'mono-0' })
-      if (i === 4) result.push({ type: 'weekly', key: 'weekly-0' })
+  const isFiltering = search.length > 0 || selectedKeywords.size > 0
+
+  const matchesItem = useCallback((item) => {
+    if (search) {
+      const q = normalize(search)
+      const hit =
+        [item.visible_title, item.title, item.department, item.identifier]
+          .some((f) => f && normalize(f).includes(q)) ||
+        (item.keywords ?? []).some((k) => normalize(k).includes(q))
+      if (!hit) return false
     }
-    return result
+    if (selectedKeywords.size > 0) {
+      const kws = new Set(item.keywords ?? [])
+      const kwHit =
+        matchMode === 'all'
+          ? [...selectedKeywords].every((k) => kws.has(k))
+          : [...selectedKeywords].some((k) => kws.has(k))
+      if (!kwHit) return false
+    }
+    return true
+  }, [search, selectedKeywords, matchMode])
+
+  const filteredGroups = useMemo(() => {
+    if (!isFiltering) return []
+    return groups
+      .map((g) => ({
+        ...g,
+        items: g.items.filter(matchesItem),
+        updatedItems: g.updatedItems.filter(matchesItem),
+      }))
+      .filter((g) => g.items.length > 0 || g.updatedItems.length > 0)
+  }, [groups, isFiltering, matchesItem])
+
+  const displayGroups = isFiltering ? filteredGroups : visibleGroups
+
+  const filteredResultCount = useMemo(
+    () => filteredGroups.reduce((n, g) => n + g.items.length + g.updatedItems.length, 0),
+    [filteredGroups]
+  )
+
+  const scrollToDate = useCallback((date) => {
+    const idx = groups.findIndex((g) => g.date === date)
+    if (idx === -1) return
+    if (!isFiltering && idx >= visibleDays) {
+      setVisibleDays(idx + 1)
+      scrollTargetRef.current = date
+    } else {
+      document.getElementById(`day-${date}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [groups, visibleDays, isFiltering])
+
+  // Scroll to pending target after new days render
+  useEffect(() => {
+    if (!scrollTargetRef.current) return
+    const el = document.getElementById(`day-${scrollTargetRef.current}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      scrollTargetRef.current = null
+    }
   }, [visibleGroups])
+
+  const handleActiveChange = useCallback((date) => setActiveDate(date), [])
 
   return (
     <>
@@ -664,8 +572,71 @@ export default function LandingFeed() {
 
       <Hero docCount={allItems.length} />
 
-      {/* Ticker — shows once data is loaded */}
       {allItems.length > 0 && <Ticker items={allItems} />}
+
+      {/* ── Sticky filter bar ── */}
+      <div className="sticky top-20 z-30 bg-white/90 backdrop-blur-md border-b border-outline-variant/10">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-12 py-3 flex flex-wrap items-center gap-3">
+          {/* Text search */}
+          <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-4 py-2.5 focus-within:border-primary/50 transition-colors">
+            <span className="material-symbols-outlined text-[18px] text-outline flex-shrink-0">search</span>
+            <input
+              value={searchRaw}
+              onChange={(e) => setSearchRaw(e.target.value)}
+              placeholder="Buscar por título, departamento, identificador…"
+              className="flex-1 bg-transparent text-sm font-headline outline-none placeholder:text-outline min-w-0"
+            />
+            {searchRaw && (
+              <button onClick={() => setSearchRaw('')} className="flex-shrink-0">
+                <span className="material-symbols-outlined text-[18px] text-outline hover:text-on-surface transition-colors">close</span>
+              </button>
+            )}
+          </div>
+
+          <KeywordFilter
+            allKeywords={allKeywords}
+            selected={selectedKeywords}
+            onChange={setSelectedKeywords}
+          />
+
+          {/* AND / OR toggle — only shown when 2+ keywords selected */}
+          {selectedKeywords.size > 1 && (
+            <div className="flex items-center border border-outline-variant/30 rounded-lg overflow-hidden bg-surface-container-lowest font-headline font-bold text-xs">
+              <button
+                onClick={() => setMatchMode('any')}
+                className={`px-3 py-2.5 transition-colors ${
+                  matchMode === 'any' ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:text-primary'
+                }`}
+              >
+                ALGUNA
+              </button>
+              <button
+                onClick={() => setMatchMode('all')}
+                className={`px-3 py-2.5 transition-colors border-l border-outline-variant/30 ${
+                  matchMode === 'all' ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:text-primary'
+                }`}
+              >
+                TODAS
+              </button>
+            </div>
+          )}
+
+          {isFiltering && (
+            <div className="flex items-center gap-2">
+              <span className="font-headline text-xs text-secondary">
+                {filteredResultCount.toLocaleString('es-ES')} resultado{filteredResultCount !== 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={() => { setSearchRaw(''); setSelectedKeywords(new Set()) }}
+                className="flex items-center gap-1 font-headline text-xs text-outline hover:text-primary transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+                Limpiar
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Timeline feed */}
       <main id="timeline">
@@ -687,51 +658,58 @@ export default function LandingFeed() {
               </p>
             </div>
           ) : (
-            <>
-              {feedEntries.map((entry) => {
-                if (entry.type === 'day') {
-                  return (
-                    <DayGroup
-                      key={entry.key}
-                      date={entry.data.date}
-                      items={entry.data.items}
-                      updatedItems={entry.data.updatedItems}
-                    />
-                  )
-                }
-                // if (entry.type === 'monograph') {
-                //   return <Monograph key={entry.key} data={MONOGRAPH_DATA} />
-                // }
-                // if (entry.type === 'weekly') {
-                //   return <WeeklyDigest key={entry.key} weekData={WEEKLY_SAMPLE} />
-                // }
-                return null
-              })}
+            <div className="flex items-start gap-10">
+              {/* Feed */}
+              <div className="flex-1 min-w-0">
+                {displayGroups.map((group) => (
+                  <DayGroup
+                    key={group.date}
+                    date={group.date}
+                    items={group.items}
+                    updatedItems={group.updatedItems}
+                    onActiveChange={handleActiveChange}
+                  />
+                ))}
 
-              {hasMore && <LoadMoreSentinel onIntersect={loadMore} />}
+                {isFiltering && filteredGroups.length === 0 && (
+                  <div className="py-24 text-center">
+                    <p className="font-body italic text-xl text-secondary">
+                      No hay boletines que coincidan con la búsqueda.
+                    </p>
+                  </div>
+                )}
 
-              {!hasMore && allItems.length > 0 && (
-                <div className="py-24 text-center border-t-2 border-primary mt-12">
-                  <p className="font-headline font-black text-primary text-xl md:text-3xl mb-3 tracking-tight">
-                    — FIN DEL ARCHIVO —
-                  </p>
-                  <p className="font-headline text-[10px] text-outline uppercase tracking-[0.35em]">
-                    {allItems.length.toLocaleString('es-ES')} documentos disponibles
-                  </p>
-                </div>
-              )}
+                {!isFiltering && hasMore && <LoadMoreSentinel onIntersect={loadMore} />}
 
-              {allItems.length === 0 && !loading && (
-                <div className="py-24 text-center">
-                  <p className="font-body italic text-xl text-secondary">
-                    No se pudieron cargar los boletines.{' '}
-                    <Link to="/boletines" className="text-primary underline underline-offset-4">
-                      Ir al índice completo.
-                    </Link>
-                  </p>
-                </div>
-              )}
-            </>
+                {!isFiltering && !hasMore && allItems.length > 0 && (
+                  <div className="py-24 text-center border-t-2 border-primary mt-12">
+                    <p className="font-headline font-black text-primary text-xl md:text-3xl mb-3 tracking-tight">
+                      — FIN DEL ARCHIVO —
+                    </p>
+                    <p className="font-headline text-[10px] text-outline uppercase tracking-[0.35em]">
+                      {allItems.length.toLocaleString('es-ES')} documentos disponibles
+                    </p>
+                  </div>
+                )}
+
+                {allItems.length === 0 && (
+                  <div className="py-24 text-center">
+                    <p className="font-body italic text-xl text-secondary">
+                      No se pudieron cargar los boletines.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Calendar sidebar */}
+              <div className="hidden lg:block shrink-0 self-start sticky top-28">
+                <CalendarNav
+                  dateSet={allDateSet}
+                  currentActiveDate={activeDate}
+                  onSelectDate={scrollToDate}
+                />
+              </div>
+            </div>
           )}
         </div>
       </main>
